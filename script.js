@@ -2,6 +2,9 @@
 let currentPlantId = "pflanze1";
 let historyChart = null;
 
+console.log("HTTPS:", location.protocol);
+console.log("Host:", location.hostname);
+
 //  Variablen
 const dashboardView = document.getElementById("dashboardView");
 const cameraView = document.getElementById("cameraView");
@@ -21,13 +24,12 @@ const humidityValue = document.getElementById("humidityValue");
 const lightValue = document.getElementById("lightValue");
 const kiRecommendation = document.getElementById("kiRecommendation");
 const lastWateringSpan = document.getElementById("lastWatering");
-const lastUpdateSpan = document.getElementById("lastUpdate");
 const graphModal = document.getElementById("graphModal");
 const modalTitle = document.getElementById("modalTitle");
 const closeModal = document.querySelector(".close-modal");
 
 //  API-Basis: TESTEN
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = "https://imeon01.github.io/App/api";
 
 //  Sensordaten abrufen 
 async function fetchSensorData() {
@@ -142,14 +144,38 @@ document.querySelectorAll('.sensor-card').forEach(card => {
   });
 });
 
+
 //  Kamera und anlegen von Pfalnzen
-let stream = null;
 async function startCamera() {
   if (stream) return;
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {
+          ideal: "environment"
+        }
+      },
+      audio: false
+    });
+
     video.srcObject = stream;
-  } catch (err) { alert("Kamera nicht verfügbar: " + err.message); }
+
+    await new Promise(resolve => {
+      video.onloadedmetadata = resolve;
+    });
+
+    await video.play();
+
+  } catch (err) {
+    console.error(err);
+
+    alert(
+      "Kamera konnte nicht gestartet werden:\n" +
+      err.name + "\n" +
+      err.message
+    );
+  }
 }
 
 
@@ -173,11 +199,35 @@ backBtn.addEventListener("click", () => {
 });
 
 captureBtn.addEventListener("click", () => {
+
+  if (!video.videoWidth || !video.videoHeight) {
+    alert("Kamera ist noch nicht bereit.");
+    return;
+  }
+
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-  canvas.getContext("2d").drawImage(video, 0, 0);
-  const imageData = canvas.toDataURL("image/png");
-  preview.innerHTML = `<img src="${imageData}" width="100%" style="border-radius:16px;">`;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const imageData = canvas.toDataURL(
+    "image/jpeg",
+    0.9
+  );
+
+  preview.innerHTML =
+    `<img src="${imageData}"
+          width="100%"
+          style="border-radius:16px;">`;
+
   preview.dataset.image = imageData;
 });
 
