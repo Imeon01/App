@@ -1,264 +1,494 @@
-//  Globale Variablen 
+// =========================
+// Globale Variablen
+// =========================
+
 let currentPlantId = "pflanze1";
 let historyChart = null;
+let stream = null;
 
+console.log("SCRIPT GELADEN");
 console.log("HTTPS:", location.protocol);
 console.log("Host:", location.hostname);
 
-//  Variablen
+// =========================
+// Elemente
+// =========================
+
 const dashboardView = document.getElementById("dashboardView");
 const cameraView = document.getElementById("cameraView");
+
 const switchBtn = document.getElementById("switchToCameraBtn");
 const backBtn = document.getElementById("backToDashboardBtn");
+
 const plantSelect = document.getElementById("plantSelect");
+
 const waterBtn = document.getElementById("waterNowBtn");
+
 const captureBtn = document.getElementById("captureBtn");
 const savePlantBtn = document.getElementById("savePlantBtn");
+
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const preview = document.getElementById("preview");
+
 const plantNameInput = document.getElementById("plantName");
+
 const moistureValue = document.getElementById("moistureValue");
 const tempValue = document.getElementById("tempValue");
 const humidityValue = document.getElementById("humidityValue");
 const lightValue = document.getElementById("lightValue");
+
 const kiRecommendation = document.getElementById("kiRecommendation");
 const lastWateringSpan = document.getElementById("lastWatering");
+
 const graphModal = document.getElementById("graphModal");
 const modalTitle = document.getElementById("modalTitle");
 const closeModal = document.querySelector(".close-modal");
 
-//  API-Basis: TESTEN
+// =========================
+// API
+// =========================
+
 const API_BASE = "https://imeon01.github.io/App/api";
 
-//  Sensordaten abrufen 
+// =========================
+// Sensoren
+// =========================
+
 async function fetchSensorData() {
   try {
-    const response = await fetch(`${API_BASE}/sensors?plantId=${currentPlantId}`);
-    if (!response.ok) throw new Error("Fehler beim Abrufen der Sensordaten");
-    const data = await response.json();
-    return data;
+    const response = await fetch(
+      `${API_BASE}/sensors?plantId=${currentPlantId}`
+    );
+
+    if (!response.ok) {
+      throw new Error("API Fehler");
+    }
+
+    return await response.json();
+
   } catch (error) {
-    console.error("Fehler beim Laden der Sensordaten:", error);
-    
+
+    console.error("Sensorfehler:", error);
+
     return {
       moisture: 0,
       temperature: 0,
       humidity: 0,
       light: 0,
       lastWatering: "---",
-      kiText: "Fehler beim Laden"
+      kiText: "Keine Verbindung"
     };
   }
 }
 
-// Historische Daten (stündlich)
+// =========================
+// Historie
+// =========================
+
 async function fetchHistory(sensorType) {
+
   try {
-    const response = await fetch(`${API_BASE}/history?plantId=${currentPlantId}&sensor=${sensorType}&interval=hour`);
-    if (!response.ok) throw new Error("Fehler beim Abrufen der Historie");
-    const history = await response.json();
-    return history;
+
+    const response = await fetch(
+      `${API_BASE}/history?plantId=${currentPlantId}&sensor=${sensorType}&interval=hour`
+    );
+
+    if (!response.ok) {
+      throw new Error("Historie Fehler");
+    }
+
+    return await response.json();
+
   } catch (error) {
-    console.error("Fehler beim Laden der Historie:", error);
+
+    console.error(error);
+
     return [];
   }
 }
 
-//  Dashboard aktualisieren 
+// =========================
+// Dashboard
+// =========================
+
 async function updateDashboard() {
+
   try {
+
     const data = await fetchSensorData();
-    moistureValue.innerText = data.moisture + " %";
-    tempValue.innerText = data.temperature.toFixed(1) + " °C";
-    humidityValue.innerText = data.humidity + " %";
-    lightValue.innerText = data.light + " lx";
+
+    moistureValue.innerText = `${data.moisture} %`;
+    tempValue.innerText = `${Number(data.temperature).toFixed(1)} °C`;
+    humidityValue.innerText = `${data.humidity} %`;
+    lightValue.innerText = `${data.light} lx`;
+
     kiRecommendation.innerText = data.kiText;
     lastWateringSpan.innerText = data.lastWatering;
-    lastUpdateSpan.innerText = new Date().toLocaleTimeString();
+
   } catch (error) {
-    console.error("Fehler beim Aktualisieren des Dashboards:", error);
+
+    console.error(
+      "Dashboard Fehler:",
+      error
+    );
   }
 }
 
-//  Manuelle Bewässerung? 
+// =========================
+// Bewässerung
+// =========================
+
 async function manualWater() {
+
   try {
-    const response = await fetch(`${API_BASE}/water/manual`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plantId: currentPlantId })
-    });
-    if (!response.ok) throw new Error("Fehler beim Gießen");
+
+    const response = await fetch(
+      `${API_BASE}/water/manual`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          plantId: currentPlantId
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error();
+    }
+
     await updateDashboard();
+
   } catch (error) {
+
     console.error(error);
+
     alert("Fehler beim Gießen");
   }
 }
 
-//  Graph mit stündlichen Werten 
+// =========================
+// Graph
+// =========================
+
 async function showGraph(sensorType) {
+
   const history = await fetchHistory(sensorType);
+
   const labels = history.map(h => h.date);
   const values = history.map(h => h.value);
-  
-  let unit = "";
+
   let yLabel = "";
+
   switch(sensorType) {
-    case 'moisture': unit = "%"; yLabel = "Bodenfeuchtigkeit (%)"; break;
-    case 'temperature': unit = "°C"; yLabel = "Temperatur (°C)"; break;
-    case 'humidity': unit = "%"; yLabel = "Luftfeuchtigkeit (%)"; break;
-    case 'light': unit = "lx"; yLabel = "Licht (lx)"; break;
+    case "moisture":
+      yLabel = "Bodenfeuchtigkeit (%)";
+      break;
+
+    case "temperature":
+      yLabel = "Temperatur (°C)";
+      break;
+
+    case "humidity":
+      yLabel = "Luftfeuchtigkeit (%)";
+      break;
+
+    case "light":
+      yLabel = "Licht (lx)";
+      break;
   }
-  modalTitle.innerText = `Verlauf (letzte 24 Std) – ${yLabel}`;
-  
-  if (historyChart) historyChart.destroy();
-  const ctx = document.getElementById('historyChart').getContext('2d');
+
+  modalTitle.innerText = yLabel;
+
+  if (historyChart) {
+    historyChart.destroy();
+  }
+
+  const ctx =
+    document
+      .getElementById("historyChart")
+      .getContext("2d");
+
   historyChart = new Chart(ctx, {
-    type: 'line',
+    type: "line",
     data: {
       labels,
       datasets: [{
         label: yLabel,
         data: values,
-        borderColor: '#2c5e2e',
-        fill: false,
+        borderColor: "#2c5e2e",
         tension: 0.2
       }]
     },
-    options: { responsive: true, maintainAspectRatio: true }
+    options: {
+      responsive: true
+    }
   });
+
   graphModal.style.display = "flex";
 }
 
-//  Graph schließen 
-closeModal.onclick = () => { graphModal.style.display = "none"; };
-window.onclick = (e) => { if (e.target === graphModal) graphModal.style.display = "none"; };
+// =========================
+// Modal
+// =========================
 
-//  Klick-Events auf Dashboard 
-document.querySelectorAll('.sensor-card').forEach(card => {
-  card.addEventListener('click', (e) => {
-    const sensor = card.dataset.sensor;
-    if (sensor) showGraph(sensor);
-  });
-});
+closeModal.onclick = () => {
+  graphModal.style.display = "none";
+};
 
+window.onclick = (e) => {
 
-//  Kamera und anlegen von Pfalnzen
-async function startCamera() {
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment"
+  if (e.target === graphModal) {
+    graphModal.style.display = "none";
+  }
+};
+
+// =========================
+// Sensor Karten
+// =========================
+
+document
+  .querySelectorAll(".sensor-card")
+  .forEach(card => {
+
+    card.addEventListener("click", () => {
+
+      const sensor =
+        card.dataset.sensor;
+
+      if (sensor) {
+        showGraph(sensor);
       }
     });
+  });
+
+// =========================
+// Kamera
+// =========================
+
+async function startCamera() {
+
+  console.log("startCamera()");
+
+  try {
+
+    if (!navigator.mediaDevices) {
+      alert("mediaDevices fehlt");
+      return;
+    }
+
+    if (!navigator.mediaDevices.getUserMedia) {
+      alert("getUserMedia fehlt");
+      return;
+    }
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: {
+            ideal: "environment"
+          }
+        },
+        audio: false
+      });
 
     video.srcObject = stream;
 
-    video.onloadedmetadata = () => {
-      console.log("Video bereit");
-      console.log(video.videoWidth, video.videoHeight);
-      video.play();
-    };
+    await video.play();
+
+    console.log(
+      "Kamera gestartet"
+    );
 
   } catch (err) {
-    alert("Kamera Fehler: " + err.name + " - " + err.message);
+
+    console.error(err);
+
+    alert(
+      "Kamera Fehler:\n" +
+      err.name +
+      "\n" +
+      err.message
+    );
   }
 }
-
-video.addEventListener("playing", () => {
-  console.log("Video läuft");
-});
-
-
 
 function stopCamera() {
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
+
+  if (!stream) return;
+
+  stream
+    .getTracks()
+    .forEach(track => track.stop());
+
+  video.srcObject = null;
+
+  stream = null;
 }
 
-switchBtn.addEventListener("click", () => {
-  dashboardView.style.display = "none";
-  cameraView.style.display = "block";
-  startCamera();
-  plantNameInput.value = "";
-});
+// =========================
+// Navigation
+// =========================
 
-backBtn.addEventListener("click", () => {
-  cameraView.style.display = "none";
-  dashboardView.style.display = "block";
-  stopCamera();
-  updateDashboard();
-});
+switchBtn.addEventListener(
+  "click",
+  async () => {
 
-captureBtn.addEventListener("click", () => {
+    console.log(
+      "Kamera Ansicht öffnen"
+    );
 
-  if (!video.videoWidth || !video.videoHeight) {
-    alert("Kamera ist noch nicht bereit.");
-    return;
+    dashboardView.style.display =
+      "none";
+
+    cameraView.style.display =
+      "block";
+
+    preview.innerHTML = "";
+
+    delete preview.dataset.image;
+
+    plantNameInput.value = "";
+
+    await startCamera();
   }
+);
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+backBtn.addEventListener(
+  "click",
+  () => {
 
-  const ctx = canvas.getContext("2d");
+    stopCamera();
 
-  ctx.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
+    cameraView.style.display =
+      "none";
 
-  const imageData = canvas.toDataURL(
-    "image/jpeg",
-    0.9
-  );
+    dashboardView.style.display =
+      "block";
 
-  preview.innerHTML =
-    `<img src="${imageData}"
-          width="100%"
-          style="border-radius:16px;">`;
-
-  preview.dataset.image = imageData;
-});
-
-savePlantBtn.addEventListener("click", async () => {
-  const name = plantNameInput.value.trim();
-  if (!name) return alert("Bitte Namen eingeben");
-  if (!preview.dataset.image) return alert("Bitte zuerst ein Foto machen");
-
-  try {
-    const response = await fetch(`${API_BASE}/plants`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name, image_base64: preview.dataset.image })
-    });
-    if (!response.ok) throw new Error("Fehler beim Speichern");
-    const result = await response.json();
-
-    alert(`Pflanze "${name}" wurde angelegt.`);
-    const option = document.createElement("option");
-    option.value = result.plantId; 
-    option.textContent = name;
-    plantSelect.appendChild(option);
-    plantSelect.value = option.value;
-    currentPlantId = option.value;
-    backBtn.click();
-  } catch (error) {
-    console.error(error);
-    alert("Fehler beim Speichern der Pflanze");
+    updateDashboard();
   }
-});
+);
 
-plantSelect.addEventListener("change", (e) => {
-  currentPlantId = e.target.value;
-  updateDashboard();
-});
+// =========================
+// Foto aufnehmen
+// =========================
 
-waterBtn.addEventListener("click", manualWater);
+captureBtn.addEventListener(
+  "click",
+  () => {
 
-//  Start 
+    if (!stream) {
+      alert(
+        "Kamera wurde nicht gestartet"
+      );
+      return;
+    }
+
+    if (!video.videoWidth) {
+      alert(
+        "Kein Kamerabild verfügbar"
+      );
+      return;
+    }
+
+    canvas.width =
+      video.videoWidth;
+
+    canvas.height =
+      video.videoHeight;
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+    const imageData =
+      canvas.toDataURL(
+        "image/jpeg",
+        0.9
+      );
+
+    preview.innerHTML = `
+      <img
+        src="${imageData}"
+        width="100%"
+        style="border-radius:16px;"
+      >
+    `;
+
+    preview.dataset.image =
+      imageData;
+  }
+);
+
+// =========================
+// Pflanze speichern
+// =========================
+
+savePlantBtn.addEventListener(
+  "click",
+  async () => {
+
+    const name =
+      plantNameInput.value.trim();
+
+    if (!name) {
+      alert("Name fehlt");
+      return;
+    }
+
+    if (!preview.dataset.image) {
+      alert("Foto fehlt");
+      return;
+    }
+
+    alert(
+      "Backend noch nicht verfügbar"
+    );
+  }
+);
+
+// =========================
+// Pflanze wechseln
+// =========================
+
+plantSelect.addEventListener(
+  "change",
+  (e) => {
+
+    currentPlantId =
+      e.target.value;
+
+    updateDashboard();
+  }
+);
+
+// =========================
+// Bewässerung Button
+// =========================
+
+waterBtn.addEventListener(
+  "click",
+  manualWater
+);
+
+// =========================
+// Start
+// =========================
+
 updateDashboard();
-setInterval(updateDashboard, 15000);
+
+setInterval(
+  updateDashboard,
+  15000
+);
