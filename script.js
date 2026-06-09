@@ -142,14 +142,126 @@ document.querySelectorAll('.sensor-card').forEach(card => {
 });
 
 //  Kamera und anlegen von Pfalnzen
+// Kamera
 let stream = null;
+
 async function startCamera() {
-  if (stream) return;
+
+  console.log("startCamera gestartet");
+
+  if (!navigator.mediaDevices) {
+    alert("navigator.mediaDevices nicht verfügbar");
+    return;
+  }
+
+  if (!navigator.mediaDevices.getUserMedia) {
+    alert("getUserMedia nicht verfügbar");
+    return;
+  }
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: {
+          ideal: "environment"
+        }
+      },
+      audio: false
+    });
+
     video.srcObject = stream;
-  } catch (err) { alert("Kamera nicht verfügbar: " + err.message); }
+
+    await video.play();
+
+    console.log("Video gestartet");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert(
+      "Kamera Fehler:\n" +
+      err.name +
+      "\n" +
+      err.message
+    );
+  }
 }
+
+function stopCamera() {
+
+  if (!stream) return;
+
+  stream.getTracks().forEach(track => track.stop());
+
+  video.srcObject = null;
+  stream = null;
+}
+
+switchBtn.addEventListener("click", async () => {
+
+  dashboardView.style.display = "none";
+  cameraView.style.display = "block";
+
+  preview.innerHTML = "";
+  delete preview.dataset.image;
+
+  plantNameInput.value = "";
+
+  await startCamera();
+});
+
+backBtn.addEventListener("click", () => {
+
+  stopCamera();
+
+  cameraView.style.display = "none";
+  dashboardView.style.display = "block";
+
+  updateDashboard();
+});
+
+captureBtn.addEventListener("click", () => {
+
+  if (!stream) {
+    alert("Kamera wurde nicht gestartet");
+    return;
+  }
+
+  if (!video.videoWidth) {
+    alert("Kein Kamerabild verfügbar");
+    return;
+  }
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const ctx = canvas.getContext("2d");
+
+  ctx.drawImage(
+    video,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  const imageData = canvas.toDataURL(
+    "image/jpeg",
+    0.9
+  );
+
+  preview.innerHTML = `
+    <img
+      src="${imageData}"
+      width="100%"
+      style="border-radius:16px;"
+    >
+  `;
+
+  preview.dataset.image = imageData;
+});
 
 
 
