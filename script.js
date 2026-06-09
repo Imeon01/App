@@ -147,10 +147,22 @@ let stream = null;
 async function startCamera() {
   if (stream) return;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    // Rückwärtige Kamera (environment) anfordern
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" } }
+    });
     video.srcObject = stream;
     await video.play();
-  } catch (err) { alert("Kamera nicht verfügbar: " + err.message); }
+  } catch (err) {
+    // Fallback: falls "environment" nicht verfügbar, normale Kamera
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+      await video.play();
+    } catch (e) {
+      alert("Kamera nicht verfügbar: " + e.message);
+    }
+  }
 }
 
 function stopCamera() {
