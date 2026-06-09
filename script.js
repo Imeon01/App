@@ -1,6 +1,7 @@
 //  Globale Variablen 
 let currentPlantId = "pflanze1";
 let historyChart = null;
+let currentFacingMode = "environment";
 
 //  Variablen
 const dashboardView = document.getElementById("dashboardView");
@@ -144,17 +145,16 @@ document.querySelectorAll('.sensor-card').forEach(card => {
 
 //  Kamera und anlegen von Pfalnzen
 let stream = null;
-async function startCamera() {
-  if (stream) return;
+
+async function startCamera(facingMode) {
+  if (stream) stopCamera();
   try {
-    // Rückwärtige Kamera (environment) anfordern
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" } }
+      video: { facingMode: { exact: facingMode } }
     });
     video.srcObject = stream;
     await video.play();
   } catch (err) {
-    // Fallback: falls "environment" nicht verfügbar, normale Kamera
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
       video.srcObject = stream;
@@ -169,10 +169,28 @@ function stopCamera() {
   if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
 }
 
+//  Kamera-Wechsel-Button erstellen (falls nicht existiert)
+let toggleCamBtn = document.getElementById("toggleCameraBtn");
+if (!toggleCamBtn) {
+  toggleCamBtn = document.createElement("button");
+  toggleCamBtn.id = "toggleCameraBtn";
+  toggleCamBtn.textContent = "🔄 Kamera wechseln";
+  toggleCamBtn.style.marginLeft = "10px";
+  const cameraControls = captureBtn.parentNode;
+  cameraControls.appendChild(toggleCamBtn);
+}
+
+toggleCamBtn.onclick = () => {
+  currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+  startCamera(currentFacingMode);
+  preview.innerHTML = "";
+  delete preview.dataset.image;
+};
+
 switchBtn.addEventListener("click", () => {
   dashboardView.style.display = "none";
   cameraView.style.display = "block";
-  startCamera();
+  startCamera(currentFacingMode);
   plantNameInput.value = "";
 });
 
@@ -184,6 +202,7 @@ backBtn.addEventListener("click", () => {
 });
 
 captureBtn.addEventListener("click", () => {
+  if (!stream) { alert("Kamera nicht aktiv"); return; }
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   canvas.getContext("2d").drawImage(video, 0, 0);
