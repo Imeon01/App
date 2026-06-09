@@ -2,9 +2,6 @@
 let currentPlantId = "pflanze1";
 let historyChart = null;
 
-console.log("HTTPS:", location.protocol);
-console.log("Host:", location.hostname);
-
 //  Variablen
 const dashboardView = document.getElementById("dashboardView");
 const cameraView = document.getElementById("cameraView");
@@ -29,7 +26,7 @@ const modalTitle = document.getElementById("modalTitle");
 const closeModal = document.querySelector(".close-modal");
 
 //  API-Basis: TESTEN
-const API_BASE = "https://imeon01.github.io/App/api";
+const API_BASE = "http://127.0.0.1:8000/api";
 
 //  Sensordaten abrufen 
 async function fetchSensorData() {
@@ -144,32 +141,15 @@ document.querySelectorAll('.sensor-card').forEach(card => {
   });
 });
 
-
 //  Kamera und anlegen von Pfalnzen
+let stream = null;
 async function startCamera() {
+  if (stream) return;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "environment"
-      }
-    });
-
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-
-    video.onloadedmetadata = () => {
-      console.log("Video bereit");
-      console.log(video.videoWidth, video.videoHeight);
-      video.play();
-    };
-
-  } catch (err) {
-    alert("Kamera Fehler: " + err.name + " - " + err.message);
-  }
+  } catch (err) { alert("Kamera nicht verfügbar: " + err.message); }
 }
-
-video.addEventListener("playing", () => {
-  console.log("Video läuft");
-});
 
 
 
@@ -192,35 +172,11 @@ backBtn.addEventListener("click", () => {
 });
 
 captureBtn.addEventListener("click", () => {
-
-  if (!video.videoWidth || !video.videoHeight) {
-    alert("Kamera ist noch nicht bereit.");
-    return;
-  }
-
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
-
-  const ctx = canvas.getContext("2d");
-
-  ctx.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-  const imageData = canvas.toDataURL(
-    "image/jpeg",
-    0.9
-  );
-
-  preview.innerHTML =
-    `<img src="${imageData}"
-          width="100%"
-          style="border-radius:16px;">`;
-
+  canvas.getContext("2d").drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL("image/png");
+  preview.innerHTML = `<img src="${imageData}" width="100%" style="border-radius:16px;">`;
   preview.dataset.image = imageData;
 });
 
