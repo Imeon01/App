@@ -142,35 +142,16 @@ document.querySelectorAll('.sensor-card').forEach(card => {
   });
 });
 
+//  Kamera und anlegen von Pfalnzen
 let stream = null;
 async function startCamera() {
   if (stream) return;
-  
-  // Browser-Prüfung
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    alert("Dein Browser unterstützt keine Kamera. Bitte nutze Chrome, Safari oder Firefox.");
-    return;
-  }
-  
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ 
-      video: { facingMode: "environment" }  // Rückkamera bevorzugen
-    });
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
     video.srcObject = stream;
-  } catch (err) {
-    console.error("Kamera Fehler:", err);
-    
-    if (err.name === "NotAllowedError") {
-      alert("Kamera-Zugriff verweigert.\n\nBitte erlaube die Kamera:\n• Chrome: Tippe auf das Schloss-Symbol in der Adressleiste\n• Einstellungen → Berechtigungen → Kamera → Erlauben");
-    } else if (err.name === "NotFoundError") {
-      alert("Keine Kamera auf diesem Gerät gefunden.");
-    } else if (err.name === "NotReadableError") {
-      alert("Die Kamera wird bereits von einer anderen App genutzt.");
-    } else {
-      alert("Kamera nicht verfügbar: " + err.message + "\n\nVersuche es mit Chrome oder Safari.");
-    }
-  }
+  } catch (err) { alert("Kamera nicht verfügbar: " + err.message); }
 }
+
 
 
 function stopCamera() {
