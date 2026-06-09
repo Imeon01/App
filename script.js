@@ -147,36 +147,29 @@ document.querySelectorAll('.sensor-card').forEach(card => {
 
 //  Kamera und anlegen von Pfalnzen
 async function startCamera() {
-  if (stream) return;
-
   try {
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        facingMode: {
-          ideal: "environment"
-        }
-      },
-      audio: false
+        facingMode: "environment"
+      }
     });
 
     video.srcObject = stream;
 
-    await new Promise(resolve => {
-      video.onloadedmetadata = resolve;
-    });
-
-    await video.play();
+    video.onloadedmetadata = () => {
+      console.log("Video bereit");
+      console.log(video.videoWidth, video.videoHeight);
+      video.play();
+    };
 
   } catch (err) {
-    console.error(err);
-
-    alert(
-      "Kamera konnte nicht gestartet werden:\n" +
-      err.name + "\n" +
-      err.message
-    );
+    alert("Kamera Fehler: " + err.name + " - " + err.message);
   }
 }
+
+video.addEventListener("playing", () => {
+  console.log("Video läuft");
+});
 
 
 
