@@ -492,7 +492,7 @@ waterBtn.addEventListener(
 
 updateDashboard();
 
-/* setInterval(
+setInterval(
   updateDashboard,
   15000
-); */
+);
