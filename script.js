@@ -270,6 +270,8 @@ document
 // =========================
 
 async function startCamera() {
+  alert(location.href);
+  
 
   console.log("startCamera()");
 
@@ -294,6 +296,7 @@ async function startCamera() {
         },
         audio: false
       });
+      alert("Kamerazugriff erhalten");
 
     video.srcObject = stream;
 
@@ -354,6 +357,7 @@ switchBtn.addEventListener(
     plantNameInput.value = "";
 
     await startCamera();
+    alert("stream = " + !!stream);
   }
 );
 
@@ -488,7 +492,7 @@ waterBtn.addEventListener(
 
 updateDashboard();
 
-setInterval(
+/* setInterval(
   updateDashboard,
   15000
-);
+); */
