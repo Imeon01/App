@@ -192,6 +192,10 @@ backBtn.addEventListener("click", () => {
   dashboardView.style.display = "block";
   stopCamera();
   updateDashboard();
+  
+  preview.innerHTML = "";
+  delete preview.dataset.image;
+  plantNameInput.value = "";
 });
 
 captureBtn.addEventListener("click", () => {
