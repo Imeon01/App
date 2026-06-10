@@ -1,9 +1,9 @@
 //  Globale Variablen 
-let currentPlantId = "pflanze1";
-let historyChart = null;
-let currentFacingMode = "environment";
+let currentPlantId = "pflanze1";          // Aktuelle Pflanze
+let historyChart = null;                  // Graph
+let currentFacingMode = "environment";    // Kamera Modus
 
-//  Variablen
+//  Variablen + DOM
 const dashboardView = document.getElementById("dashboardView");
 const cameraView = document.getElementById("cameraView");
 const switchBtn = document.getElementById("switchToCameraBtn");
@@ -29,16 +29,18 @@ const lastUpdateSpan = document.getElementById("lastUpdateSpan");
 const toggleCamBtn = document.getElementById("toggleCameraBtn");
 
 
-//  API-Basis: TESTEN
-const API_BASE = "http://127.0.0.1:8000/api";
+//  API URL : TESTEN
+const API_BASE = "http://127.0.0.1:8000/api";     
 
 //  Sensordaten abrufen 
 async function fetchSensorData() {
   try {
-    const response = await fetch(`${API_BASE}/sensors?plantId=${currentPlantId}`);
+    const response = await fetch(`${API_BASE}/sensors?plantId=${currentPlantId}`);    // Anfrage an Server
     if (!response.ok) throw new Error("Fehler beim Abrufen der Sensordaten");
     const data = await response.json();
     return data;
+
+    // Dummy Werte falls Fehler
   } catch (error) {
     console.error("Fehler beim Laden der Sensordaten:", error);
     
@@ -53,7 +55,7 @@ async function fetchSensorData() {
   }
 }
 
-// Historische Daten (stündlich)
+// Historische Daten (stündlich) ???
 async function fetchHistory(sensorType) {
   try {
     const response = await fetch(`${API_BASE}/history?plantId=${currentPlantId}&sensor=${sensorType}&interval=hour`);
@@ -66,7 +68,7 @@ async function fetchHistory(sensorType) {
   }
 }
 
-//  Dashboard aktualisieren 
+//  Dashboard aktualisieren mit Werten
 async function updateDashboard() {
   try {
     const data = await fetchSensorData();
@@ -168,7 +170,9 @@ async function startCamera(facingMode) {
 }
 
 function stopCamera() {
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop());
+  stream = null;
+  video.srcObject = null; }
 }
 
 //  Kamera-Flip-Button 
@@ -207,6 +211,7 @@ captureBtn.addEventListener("click", () => {
   preview.innerHTML = `<img src="${imageData}" width="100%" style="border-radius:16px;">`;
   preview.dataset.image = imageData;
 });
+
 
 savePlantBtn.addEventListener("click", async () => {
   const name = plantNameInput.value.trim();
