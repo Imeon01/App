@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>SmartWaterPlant</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1> Smart Water Plant</h1>
+  </header>
+
+  <!-- DASHBOARD -->
+  <main id="dashboardView">
+    <!-- Button wurde hierhin verschoben (nur in dashboardView sichtbar) -->
+    <div class="camera-switch-wrapper">
+      <button id="switchToCameraBtn" class="camera-switch">📸 Pflanze anlegen</button>
+    </div>
+
+    <div class="plant-selector">
+      <label> Aktuelle Pflanze:</label>
+      <select id="plantSelect">
+        <option value="pflanze1">Pflanze 1</option>
+      </select>
+    </div>
+
+    <div class="sensor-grid">
+      <div class="sensor-card" data-sensor="moisture">
+        <h3>Bodenfeuchtigkeit</h3>
+        <div class="value" id="moistureValue">-- %</div>
+      </div>
+      <div class="sensor-card temp-card" data-sensor="temperature">
+        <h3>Temperatur</h3>
+        <div class="value vertical-center" id="tempValue">-- °C</div>
+      </div>
+      <div class="sensor-card" data-sensor="humidity">
+        <h3>Luftfeuchtigkeit</h3>
+        <div class="value" id="humidityValue">-- %</div>
+      </div>
+      <div class="sensor-card" data-sensor="light">
+        <h3>Licht</h3>
+        <div class="value" id="lightValue">-- lx</div>
+      </div>
+    </div>
+
+    <div class="ki-card">
+      <h3>Nächstes gießen</h3>
+      <p id="kiRecommendation">Lade Empfehlung...</p>
+      <div class="last-watering">
+        Letzte Bewässerung: <span id="lastWatering">---</span>
+      </div>
+      <button id="waterNowBtn" class="water-btn">Jetzt gießen</button>
+    </div>
+  </main>
+
+  <!-- KAMERA-ANSICHT  -->
+<main id="cameraView" style="display: none;">
+  <div class="camera-header">
+    <h2>Neue Pflanze anlegen</h2>
+    <button id="toggleCameraBtn" class="camera-btn flip-btn">Flip</button>
+  </div>
+  <div class="camera-container">
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <input type="text" id="plantName" placeholder="Pflanzenname..." value="Kartoffel" />
+    <button id="captureBtn" class="camera-btn">📸 Foto aufnehmen</button>
+  </div>
+  <div id="preview"></div>
+  <div class="button-group">
+    <button id="savePlantBtn" class="camera-btn">Pflanze speichern</button>
+    <button id="backToDashboardBtn" class="camera-btn secondary">← Zurück</button>
+  </div>
+</main>
+
+<!-- MODAL FÜR GRAPH (stündlich) -->
+<div id="graphModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal">&times;</span>
+    <h3 id="modalTitle">Historische Werte (stündlich)</h3>
+    <canvas id="historyChart" width="400" height="300"></canvas>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
