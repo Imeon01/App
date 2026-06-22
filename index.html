@@ -22,11 +22,16 @@
 
     <div class="plant-selector">
       <label> Aktuelle Pflanze:</label>
+      <!-- Backend-Integration: Platzhalter-Option "pflanze1" entfernt — unser
+           Schema nutzt Integer-plant_ids, "pflanze1" kann nie matchen. Pflanzen
+           kommen ab jetzt ausschließlich über "Pflanze anlegen" in die Liste. -->
       <select id="plantSelect">
-        <option value="pflanze1">Pflanze 1</option>
       </select>
     </div>
 
+    <!-- Backend-Integration: Luftfeuchte- und Licht-Karten entfernt — unser
+         Sensor-Schema (DB2/sensor_readings) misst nur Bodenfeuchte, EC, pH und
+         Bodentemperatur. Luftfeuchte/Licht werden nicht erfasst. -->
     <div class="sensor-grid">
       <div class="sensor-card" data-sensor="moisture">
         <h3>Bodenfeuchtigkeit</h3>
@@ -36,23 +41,47 @@
         <h3>Temperatur</h3>
         <div class="value vertical-center" id="tempValue">-- °C</div>
       </div>
-      <div class="sensor-card" data-sensor="humidity">
-        <h3>Luftfeuchtigkeit</h3>
-        <div class="value" id="humidityValue">-- %</div>
+      <!-- Backend-Integration: EC/pH-Karten neu — GET /api/sensors liefert
+           jetzt zusätzlich ec/ph (waren in DB2 schon vorhanden, bisher nicht
+           durchgereicht). Kein data-sensor-Attribut: GET /api/history kennt
+           nur moisture/temperature, ein Klick soll hier keinen (leeren)
+           Graphen öffnen. -->
+      <div class="sensor-card">
+        <h3>EC</h3>
+        <div class="value" id="ecValue">-- mS/cm</div>
       </div>
-      <div class="sensor-card" data-sensor="light">
-        <h3>Licht</h3>
-        <div class="value" id="lightValue">-- lx</div>
+      <div class="sensor-card">
+        <h3>pH</h3>
+        <div class="value" id="phValue">-- </div>
       </div>
+    </div>
+
+    <!-- Backend-Integration: neue Karte — Pflanzenart/Konfidenz (aus dem
+         Profil, PlantNet-Bestimmung) und die hinterlegten Sollwerte, bisher
+         nirgends im Dashboard sichtbar. -->
+    <div class="info-card">
+      <h3>Pflanze &amp; Sollwerte</h3>
+      <div>Art: <span id="speciesValue">--</span> (Konfidenz: <span id="confidenceValue">--</span>)</div>
+      <div>Ziel-Feuchte: <span id="targetMoistureValue">--</span> % (Schwelle: <span id="moistureThresholdValue">--</span> %)</div>
+      <div>EC-Sollbereich: <span id="ecRangeValue">--</span> mS/cm</div>
+      <div>pH-Sollbereich: <span id="phRangeValue">--</span></div>
+      <div>Temp-Sollbereich: <span id="tempRangeValue">--</span> °C</div>
     </div>
 
     <div class="ki-card">
       <h3>Nächstes gießen</h3>
+      <!-- Backend-Integration: Aktion jetzt explizit als eigenes Label,
+           nicht mehr nur implizit im Begründungstext enthalten. -->
+      <div class="action-label">Letzte Aktion: <span id="actionValue">--</span> <span id="outcomeBadge"></span></div>
       <p id="kiRecommendation">Lade Empfehlung...</p>
       <div class="last-watering">
         Letzte Bewässerung: <span id="lastWatering">---</span>
       </div>
       <button id="waterNowBtn" class="water-btn">Jetzt gießen</button>
+      <!-- Backend-Integration: neuer Button öffnet das Verlaufs-Protokoll
+           (GET /api/events) — zeigt die letzten Pflegeentscheidungen mit
+           Begründung statt nur der allerletzten. -->
+      <button id="showEventsBtn" class="water-btn">Verlauf anzeigen</button>
     </div>
   </main>
 
@@ -68,7 +97,22 @@
     <input type="text" id="plantName" placeholder="Pflanzenname..." value="Kartoffel" />
     <button id="captureBtn" class="camera-btn">📸 Foto aufnehmen</button>
   </div>
-  <div id="preview"></div>
+
+  <!-- Backend-Integration: Beispielbilder — liegen lokal unter
+       docs/App-Frontend/example-images/ (Dateinamen in script.js,
+       EXAMPLE_IMAGES). Klick fügt das Bild dem Zwischenspeicher unten hinzu,
+       genauso wie ein Kamera-Foto. -->
+  <div class="example-images">
+    <p>Oder Beispielbild wählen:</p>
+    <div id="exampleImageList"></div>
+  </div>
+
+  <!-- Backend-Integration: Zwischenspeicher (Staging) ersetzt das alte
+       einzelne `preview`-Bild. "Foto aufnehmen" UND Beispielbilder landen
+       erst hier als Liste; "Pflanze speichern" sendet sie gesammelt
+       (Mehrbild-Unterstützung, bis zu 3 Bilder sinnvoll für PlantNet). -->
+  <div id="stagedGallery" class="staged-gallery"></div>
+
   <div class="button-group">
     <button id="savePlantBtn" class="camera-btn">Pflanze speichern</button>
     <button id="backToDashboardBtn" class="camera-btn secondary">← Zurück</button>
@@ -84,6 +128,21 @@
   </div>
 </div>
 
+<!-- Backend-Integration: neues Modal — Verlaufs-Protokoll (GET /api/events),
+     zeigt die letzten Pflegeentscheidungen samt Begründung und Wirkungs-Status. -->
+<div id="eventsModal" class="modal">
+  <div class="modal-content">
+    <span class="close-events-modal">&times;</span>
+    <h3>Verlauf der letzten Entscheidungen</h3>
+    <ul id="eventsList"></ul>
+  </div>
+</div>
+
+<!-- Backend-Integration: Beispielbilder als Base64 eingebettet (siehe
+     example-images-data.js) — MUSS vor script.js geladen werden. Vermeidet
+     file://-Canvas-Tainting/SecurityError, das beim Laden lokaler
+     Bilddateien per <img>/fetch() beim Doppelklick-Öffnen auftrat. -->
+<script src="example-images-data.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
