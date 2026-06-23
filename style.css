@@ -239,14 +239,8 @@ canvas { max-width: 100%; height: auto; }
   margin: 0;
 }
 
-@media (max-width: 480px) {
-  .sensor-grid { grid-template-columns: 1fr; }
-  .app { padding: 16px; }
-  .plant-selector{text-align: center;}
-}
 
-/* Backend-Integration: Schließen-Kreuz für das Verlaufs-Modal (eigene
-   Klasse, da querySelector() nur das erste .close-modal träfe). */
+/* Protokoll Fenster */
 .close-events-modal {
   position: absolute;
   right: 20px; top: 10px;
@@ -265,44 +259,63 @@ canvas { max-width: 100%; height: auto; }
   border-bottom: 1px solid #eee;
 }
 
-/* Backend-Integration: Pflanze & Sollwerte-Karte (neue Anzeige-Infos). */
+/* Sollwerte */
 .info-card {
   background: var(--dashboard-accent-colour);
   border-radius: 24px;
   padding: 16px 20px;
   margin: 20px 0;
   text-align: left;
+  justify-content: center;
+  
+
 }
 .info-card h3 { margin-bottom: 8px; text-align: center; }
 .info-card div { margin: 4px 0; }
 
-/* Backend-Integration: Aktion + Wirkungs-Badge in der ki-card. */
 .action-label {
   font-weight: bold;
   margin-bottom: 8px;
 }
 
-/* Backend-Integration: Beispielbilder-Auswahl bei "Pflanze anlegen". */
+/* Example Images */
 .example-images { margin: 12px 0; text-align: center; }
 .example-images p { font-size: 0.9rem; color: #555; margin-bottom: 6px; }
 #exampleImageList { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 .example-thumb {
-  width: 70px; height: 70px; object-fit: cover;
+  width: 80px; height: 80px; object-fit: cover;
   border-radius: 12px; cursor: pointer; border: 2px solid transparent;
 }
 .example-thumb:hover { border-color: var(--blue-accent-colour); }
 
-/* Backend-Integration: Zwischenspeicher-Galerie (mehrere gestagte Bilder
-   vor "Pflanze speichern") — ersetzt das alte einzelne #preview. */
+/* Aufgenommene Bilder */
 .staged-gallery {
-  display: flex; gap: 8px; flex-wrap: wrap;
-  margin: 12px 0; justify-content: center;
+  background-color: var(--bright-accent-colur);
+  border-radius: 1rem;
+  padding: 10px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;              
+  margin: 12px 0;
+  justify-content: center;      
 }
-.staged-thumb-wrapper { position: relative; width: 90px; height: 90px; }
+
+.staged-thumb-wrapper {
+  position: relative;
+  flex: 0 0 auto;              
+  width: 100px;                
+  height: 100px;
+  max-width: 100%;             
+}
+
 .staged-thumb {
-  width: 90px; height: 90px; object-fit: cover;
+  
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 16px;
 }
+
 .staged-thumb-remove {
   position: absolute; top: -6px; right: -6px;
   width: 24px; height: 24px; border-radius: 50%;
@@ -310,3 +323,55 @@ canvas { max-width: 100%; height: auto; }
   font-size: 1rem; line-height: 1; cursor: pointer;
 }
 .staged-thumb-remove:hover { background: #b02a2a; }
+
+
+
+/* Footer mit Protokoll und Aktualisierung*/
+footer {
+  display: flex;
+  text-align: center;
+  font-size: 0.8rem;
+  margin: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+
+.footer-center {
+  flex: 1;
+  text-align: left;
+  margin: auto;
+}
+
+.footer-right {
+  flex: 0 0 auto;
+  text-align: right;
+  margin: auto;
+
+}
+
+/* Kleiner Verlauf-Button */
+.footer-btn {
+  background: var(--dark-accent-colur);
+  color: white;
+  border: none;
+  margin: auto;
+  padding: 8px 12px;
+  border-radius: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.footer-btn:hover {
+  background: var(--active-accent-colur);
+}
+
+
+
+@media (max-width: 480px) {
+  .sensor-grid { grid-template-columns: 1fr; }
+  .app { padding: 16px; }
+  .plant-selector{text-align: center;}
+}

@@ -1,8 +1,4 @@
 //  Globale Variablen
-// Backend-Integration: kein Platzhalter "pflanze1" mehr (unser Schema nutzt
-// Integer-plant_ids, siehe index.html-Kommentar). Erst nach "Pflanze anlegen"
-// gibt es eine gültige currentPlantId; fetchSensorData() fängt den 404/422
-// bis dahin bereits ab (Dummy-Werte im Dashboard).
 let currentPlantId = null;                // Aktuelle Pflanze
 let historyChart = null;                  // Graph
 let currentFacingMode = "environment";    // Kamera Modus
@@ -19,21 +15,10 @@ const savePlantBtn = document.getElementById("savePlantBtn");
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const plantNameInput = document.getElementById("plantName");
-// Backend-Integration: `preview` (einzelnes Bild) ersetzt durch einen
-// Zwischenspeicher für mehrere Bilder — siehe stagedImages/stagedGallery
-// weiter unten. "Foto aufnehmen" UND Beispielbilder landen erst hier, bevor
-// "Pflanze speichern" alle zusammen an den Agenten sendet (Mehrbild-
-// Unterstützung, PlantNet akzeptiert bis zu 3 Bilder pro Bestimmung).
 const stagedGallery = document.getElementById("stagedGallery");
 const exampleImageList = document.getElementById("exampleImageList");
 const moistureValue = document.getElementById("moistureValue");
 const tempValue = document.getElementById("tempValue");
-// Backend-Integration: humidityValue/lightValue entfernt — die zugehörigen
-// DOM-Elemente existieren nicht mehr (index.html), unser Sensor-Schema misst
-// keine Luftfeuchte/Licht. Die alten Referenzen waren null und ließen
-// updateDashboard() bei jedem Aufruf mit TypeError abbrechen, NACH dem
-// moisture/temp-Update aber VOR kiText/lastWatering — dadurch blieben auch
-// diese beiden im Dashboard auf "Lade Empfehlung..."/"---" hängen.
 const kiRecommendation = document.getElementById("kiRecommendation");
 const lastWateringSpan = document.getElementById("lastWatering");
 const graphModal = document.getElementById("graphModal");
@@ -42,9 +27,6 @@ const closeModal = document.querySelector(".close-modal");
 const lastUpdateSpan = document.getElementById("lastUpdateSpan");
 const toggleCamBtn = document.getElementById("toggleCameraBtn");
 
-// Backend-Integration: neue DOM-Referenzen für EC/pH, Pflanzenart+Sollwerte,
-// Aktion+Wirkungsstatus und das Verlaufs-Protokoll (GET /api/sensors liefert
-// diese Felder jetzt zusätzlich, GET /api/events ist eine neue Route).
 const ecValue = document.getElementById("ecValue");
 const phValue = document.getElementById("phValue");
 const speciesValue = document.getElementById("speciesValue");
@@ -65,14 +47,9 @@ const closeEventsModal = document.querySelector(".close-events-modal");
 //  API URL : TESTEN
 const API_BASE = "http://127.0.0.1:8000/api";     
 
-// Backend-Integration: Platzhalter-Antwort, wenn noch KEINE Pflanze gewählt
-// ist (currentPlantId === null) ODER der Server nicht antwortet — vorher
-// wurde in diesem Fall trotzdem `GET /api/sensors?plantId=null` geschickt
-// (Server lehnt das mit 422 ab, "plantId" muss ein int sein), was bei jedem
-// 15s-Poll unnötig die Konsole mit Fehlern füllte.
 const _SENSOR_PLATZHALTER = {
-  moisture: 0,
-  temperature: 0,
+  moisture: null,
+  temperature: null,
   ec: null,
   ph: null,
   lastWatering: "---",
@@ -101,13 +78,9 @@ async function fetchSensorData() {
   } catch (error) {
     console.error("Fehler beim Laden der Sensordaten:", error);
 
-    // Backend-Integration: humidity/light entfernt — siehe index.html/
-    // updateDashboard()-Kommentar, unser Sensor-Schema misst das nicht.
-    // Neue Felder (ec/ph/action/outcomeConfirmed/species/...) im Fehlerfall
-    // auf null/--, damit updateDashboard() dieselbe Null-Safety nutzen kann.
     return {
-      moisture: 0,
-      temperature: 0,
+      moisture: null,
+      temperature: null,
       ec: null,
       ph: null,
       lastWatering: "---",
@@ -125,8 +98,7 @@ async function fetchSensorData() {
   }
 }
 
-// Backend-Integration: Verlaufs-Protokoll abrufen (GET /api/events, neue
-// Route) — die letzten Pflegeentscheidungen statt nur der allerletzten.
+
 async function fetchEvents() {
   if (!currentPlantId) return [];
   try {
@@ -157,20 +129,16 @@ async function fetchHistory(sensorType) {
 async function updateDashboard() {
   try {
     const data = await fetchSensorData();
-    // Backend-Integration: moisture/temperature können null sein (Profil ohne
-    // Pi-Pairing oder noch keine Messung — Designentscheidung #7), daher
-    // Fallback auf "--" statt .toFixed() auf null aufzurufen (TypeError).
     moistureValue.innerText = (data.moisture ?? "--") + " %";
     tempValue.innerText = (data.temperature != null ? data.temperature.toFixed(1) : "--") + " °C";
     kiRecommendation.innerText = data.kiText;
     lastWateringSpan.innerText = data.lastWatering;
     lastUpdateSpan.innerText = new Date().toLocaleTimeString();
 
-    // Backend-Integration: EC/pH — dieselbe Null-Safety wie moisture/temperature.
     ecValue.innerText = (data.ec ?? "--") + " mS/cm";
     phValue.innerText = (data.ph ?? "--") + "";
 
-    // Backend-Integration: Pflanzenart/Konfidenz + Sollwerte aus dem Profil.
+    // Sollwerte + Pflanze
     speciesValue.innerText = data.species ?? "--";
     confidenceValue.innerText = data.confidence != null ? Math.round(data.confidence * 100) + " %" : "--";
     targetMoistureValue.innerText = data.targetMoisture ?? "--";
@@ -179,7 +147,7 @@ async function updateDashboard() {
     phRangeValue.innerText = (data.phMin != null && data.phMax != null) ? `${data.phMin}–${data.phMax}` : "--";
     tempRangeValue.innerText = (data.tempMin != null && data.tempMax != null) ? `${data.tempMin}–${data.tempMax}` : "--";
 
-    // Backend-Integration: Aktion explizit + Wirkungsstatus-Badge.
+    // Checken ob Aktion durchgeführt
     actionValue.innerText = data.action ?? "--";
     if (data.outcomeConfirmed === true) {
       outcomeBadge.innerText = "✅ Wirkung bestätigt";
@@ -193,7 +161,7 @@ async function updateDashboard() {
   }
 }
 
-// Backend-Integration: Verlaufs-Protokoll rendern + Modal öffnen.
+// Background Protokoll
 async function showEvents() {
   const events = await fetchEvents();
   eventsList.innerHTML = "";
@@ -270,9 +238,10 @@ window.onclick = (e) => {
   if (e.target === eventsModal) eventsModal.style.display = "none";
 };
 
-// Backend-Integration: Verlaufs-Modal schließen + Button-Verdrahtung.
 closeEventsModal.onclick = () => { eventsModal.style.display = "none"; };
-showEventsBtn.addEventListener("click", showEvents);
+if (showEventsBtn) {
+  showEventsBtn.addEventListener("click", showEvents);
+}
 
 //  Klick-Events auf Dashboard 
 document.querySelectorAll('.sensor-card').forEach(card => {
@@ -310,12 +279,10 @@ function stopCamera() {
   video.srcObject = null; }
 }
 
-// Backend-Integration: Mehrbild-Zwischenspeicher (Staging). `stagedImages`
-// sammelt alle Data-URLs (Kamera-Aufnahmen + gewählte Beispielbilder), bis
-// "Pflanze speichern" sie gesammelt an POST /api/plants schickt.
+// Preview Bilder aufnehmen
 let stagedImages = [];
 
-// Hier die Dateinamen der Beispielbilder eintragen — liegen lokal unter
+// Lokale Beispiel Bilder
 // docs/App-Frontend/example-images/ (relativ zu index.html).
 const EXAMPLE_IMAGES = [
   "example-images/sonnenblume-aussehen-3693839192.jpg",
@@ -350,16 +317,16 @@ function renderStagedGallery() {
 }
 
 function addStagedImage(dataUrl) {
+  // Prüfen, ob bereits 3 Bilder im Zwischenspeicher sind
+  if (stagedImages.length >= 3) {
+    alert("Es können maximal 3 Bilder hinzugefügt werden.");
+    return;
+  }
   stagedImages.push(dataUrl);
   renderStagedGallery();
 }
 
-// Beispielbild (bereits als <img> geladenes Element) in eine Data-URL
-// wandeln — über Canvas statt fetch(): wird die Webapp per file:// direkt
-// geöffnet (Doppelklick auf index.html, kein lokaler HTTP-Server), blockieren
-// die meisten Browser fetch()-Zugriffe auf lokale Dateien aus
-// Sicherheitsgründen. Das bereits geladene <img>-Element per Canvas
-// auszulesen funktioniert auch unter file:// zuverlässig.
+// Data URL
 function imageElementToDataUrl(imgEl) {
   const canvas = document.createElement("canvas");
   canvas.width = imgEl.naturalWidth;
@@ -368,18 +335,7 @@ function imageElementToDataUrl(imgEl) {
   return canvas.toDataURL("image/jpeg");
 }
 
-// Backend-Integration: ALLE Beispielbilder als Data-URLs — das ist bewusst
-// die einzige Bildquelle für "Pflanze anlegen" (s. savePlantBtn-Handler
-// unten). Kommt jetzt aus EXAMPLE_IMAGES_BASE64 (example-images-data.js,
-// fest eingebettetes Base64) statt aus einem Datei-Ladevorgang zur
-// Laufzeit: Bilder per <img>/Canvas aus lokalen Dateien lesen, während die
-// Seite per file:// (Doppelklick auf index.html) geöffnet ist, hat den
-// Canvas "tainted" — `toDataURL()` wirft dann einen SecurityError, je nach
-// Browser unterschiedlich streng. Mit bereits eingebetteten Daten entfällt
-// das Laden zur Laufzeit komplett. Kamera/Zwischenspeicher bleiben im Code
-// stehen, werden aber für den Versand nicht mehr genutzt — die Seiten-Logik
-// dafür übernimmt jemand anders; hier zählt nur, dass der Agent verlässlich
-// Bilder bekommt, zum Testen.
+
 async function getExampleImagesAsDataUrls() {
   return EXAMPLE_IMAGES_BASE64;
 }
@@ -403,10 +359,7 @@ function renderExampleImages() {
   });
 }
 
-//  Kamera-Flip-Button
-// Backend-Integration: löscht den Zwischenspeicher beim Flip NICHT mehr
-// (vorher wurde das einzelne Vorschaubild bei jedem Flip verworfen) — schon
-// aufgenommene/gewählte Bilder sollen beim Kamera-Wechsel erhalten bleiben.
+
 toggleCamBtn.onclick = () => {
   currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
   startCamera(currentFacingMode);
@@ -417,6 +370,9 @@ switchBtn.addEventListener("click", () => {
   cameraView.style.display = "block";
   startCamera(currentFacingMode);
   plantNameInput.value = "";
+  // Footer ausblenden
+  const footer = document.querySelector("footer");
+  if (footer) footer.style.display = "none";
 });
 
 backBtn.addEventListener("click", () => {
@@ -424,11 +380,12 @@ backBtn.addEventListener("click", () => {
   dashboardView.style.display = "block";
   stopCamera();
   updateDashboard();
-
-  // Backend-Integration: Zwischenspeicher statt einzelnem `preview` leeren.
   stagedImages = [];
   renderStagedGallery();
   plantNameInput.value = "";
+  // Footer wieder einblenden
+  const footer = document.querySelector("footer");
+  if (footer) footer.style.display = "flex";
 });
 
 captureBtn.addEventListener("click", () => {
@@ -437,18 +394,10 @@ captureBtn.addEventListener("click", () => {
   canvas.height = video.videoHeight;
   canvas.getContext("2d").drawImage(video, 0, 0);
   const imageData = canvas.toDataURL("image/png");
-  // Backend-Integration: Foto wird NICHT mehr sofort gesendet/als einziges
-  // Vorschaubild gehalten, sondern dem Zwischenspeicher hinzugefügt — kann
-  // mehrfach wiederholt werden, bevor "Pflanze speichern" alle sendet.
   addStagedImage(imageData);
 });
 
 
-// Backend-Integration: Lade-Zustand für den Speichern-Button. Wurde mit dem
-// Demo-Modus-Fallback (Designentscheidungen-Dokument, Backend
-// DEMO_MODE_PLANT_CREATION) wichtiger — POST /api/plants kann dort bis zu
-// zwei volle Agentenläufe versuchen, bevor der Fallback greift, und braucht
-// entsprechend länger als ein einzelner Request.
 const savePlantBtnText = savePlantBtn.textContent;
 
 savePlantBtn.addEventListener("click", async () => {
@@ -458,12 +407,6 @@ savePlantBtn.addEventListener("click", async () => {
   savePlantBtn.disabled = true;
   savePlantBtn.textContent = "Wird angelegt...";
   try {
-    // Backend-Integration (vereinfacht auf Wunsch): Kamera/Zwischenspeicher
-    // werden hier NICHT mehr verwendet — es zählt nur, dass der Agent
-    // verlässlich Testbilder bekommt. Es werden IMMER die fest auf der Seite
-    // hinterlegten EXAMPLE_IMAGES gesendet, unabhängig davon, was sonst auf
-    // der Seite passiert. Die endgültige Foto-Logik (Kamera vs. Beispiel
-    // vs. Zwischenspeicher) übernimmt später jemand anders.
     const images = await getExampleImagesAsDataUrls();
     const response = await fetch(`${API_BASE}/plants`, {
       method: "POST",
