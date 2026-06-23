@@ -43,6 +43,10 @@ const eventsModal = document.getElementById("eventsModal");
 const eventsList = document.getElementById("eventsList");
 const closeEventsModal = document.querySelector(".close-events-modal");
 
+const imagePreviewModal = document.getElementById("imagePreviewModal");
+const previewImage = document.getElementById("previewImage");
+const closeImageModal = document.querySelector(".close-image-modal");
+
 
 //  API URL : TESTEN
 const API_BASE = "http://127.0.0.1:8000/api";     
@@ -181,6 +185,26 @@ async function showEvents() {
   eventsModal.style.display = "flex";
 }
 
+// Bild-Vorschau öffnen
+function showImagePreview(src) {
+  previewImage.src = src;
+  imagePreviewModal.style.display = "flex";
+}
+
+// Bild-Modal schließen
+if (closeImageModal) {
+  closeImageModal.onclick = () => {
+    imagePreviewModal.style.display = "none";
+  };
+}
+
+// Klick außerhalb des Bildes schließt Modal
+window.onclick = (e) => {
+  if (e.target === graphModal) graphModal.style.display = "none";
+  if (e.target === eventsModal) eventsModal.style.display = "none";
+  if (e.target === imagePreviewModal) imagePreviewModal.style.display = "none";
+};
+
 //  Manuelle Bewässerung? 
 async function manualWater() {
   if (!currentPlantId) return alert("Bitte zuerst eine Pflanze anlegen oder auswählen.");
@@ -299,6 +323,14 @@ function renderStagedGallery() {
     const img = document.createElement("img");
     img.src = dataUrl;
     img.className = "staged-thumb";
+    img.style.cursor = "pointer";
+    img.title = "Zum Vergrößern klicken";
+
+    //Vorschau der Bilder
+    img.addEventListener("click", () => {
+      showImagePreview(dataUrl);
+    });
+
     wrapper.appendChild(img);
 
     const removeBtn = document.createElement("button");
@@ -306,7 +338,8 @@ function renderStagedGallery() {
     removeBtn.className = "staged-thumb-remove";
     removeBtn.innerText = "×";
     removeBtn.title = "Bild entfernen";
-    removeBtn.addEventListener("click", () => {
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation(); // Verhindert, dass auch die Vorschau geöffnet wird
       stagedImages.splice(index, 1);
       renderStagedGallery();
     });
