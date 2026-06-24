@@ -6,7 +6,7 @@
   --bright-accent-colur: #e0f2e0;
   --blue-accent-colour: #2196f3;
   --blue-active-accent-colour: #208be2;
-  --dashboard-accent-colour: #f8f9fa;
+  --dashboard-accent-colour: #F5F5F5;
 
   --app-width: 600px;
   --gap-size: 12px;
@@ -52,7 +52,7 @@ h1 {
 /* Camera Button */
 .camera-switch {
   background: var(--dark-accent-colur); color: white; border: none;
-  padding: 20px 40px; border-radius: 1rem; font-weight: bold;
+  padding: 20px 40px; border-radius: 0.75rem; font-weight: bold;
   font-size: 1.2rem;
   cursor: pointer;
   margin: auto;
@@ -68,7 +68,7 @@ h1 {
   color: white;
   border: none;
   padding: 20px 28px;
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   font-weight: bold;
   font-size: 1.1rem;
   cursor: pointer;
@@ -158,7 +158,7 @@ h1 {
 }
 .water-btn {
   background: var(--blue-accent-colour); color: white; border: none;
-  padding: 12px 24px; border-radius: 0.9rem; font-size: 1rem;
+  padding: 12px 24px; border-radius: 0.65rem; font-size: 1rem;
   font-weight: bold; margin-top: 12px; cursor: pointer;
 }
 
@@ -358,7 +358,7 @@ footer {
   border: none;
   margin: auto;
   padding: 8px 12px;
-  border-radius: 0.6rem;
+  border-radius: 0.5rem;
   font-size: 0.8rem;
   font-weight: bold;
   cursor: pointer;

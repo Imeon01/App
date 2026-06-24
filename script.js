@@ -150,9 +150,9 @@ async function updateDashboard() {
     // Checken ob Aktion durchgeführt
     actionValue.innerText = data.action ?? "--";
     if (data.outcomeConfirmed === true) {
-      outcomeBadge.innerText = "✅ Wirkung bestätigt";
+      outcomeBadge.innerText = "✅";
     } else if (data.outcomeConfirmed === false) {
-      outcomeBadge.innerText = "❌ Keine Wirkung";
+      outcomeBadge.innerText = "❌";
     } else {
       outcomeBadge.innerText = "";
     }
