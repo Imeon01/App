@@ -34,13 +34,13 @@
         <h3>Temperatur</h3>
         <div class="value vertical-center" id="tempValue">-- °C</div>
       </div>
-      <div class="sensor-card">
+      <div class="sensor-card" data-sensor="ec">
         <h3>EC</h3>
         <div class="value" id="ecValue">-- mS/cm</div>
       </div>
-      <div class="sensor-card">
+      <div class="sensor-card" data-sensor="ph">
         <h3>pH</h3>
-        <div class="value" id="phValue">-- </div>
+        <div class="value" id="phValue">--</div>
       </div>
     </div>
 
@@ -48,7 +48,7 @@
     <div class="info-card">
       <h3>Pflanze &amp; Sollwerte</h3>
       <div>Art: <span id="speciesValue">--</span> (Konfidenz: <span id="confidenceValue">--</span>)</div>
-      <div>Ziel-Feuchte: <span id="targetMoistureValue">--</span> % (Schwelle: <span id="moistureThresholdValue">--</span> %)</div>
+      <div>Ziel Feuchtigkeit: <span id="targetMoistureValue">--</span> % (Schwelle: <span id="moistureThresholdValue">--</span> %)</div>
       <div>EC-Sollbereich: <span id="ecRangeValue">--</span> mS/cm</div>
       <div>pH-Sollbereich: <span id="phRangeValue">--</span></div>
       <div>Temp-Sollbereich: <span id="tempRangeValue">--</span> °C</div>

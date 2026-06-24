@@ -209,6 +209,8 @@ async function showGraph(sensorType) {
   switch(sensorType) {
     case 'moisture': unit = "%"; yLabel = "Bodenfeuchtigkeit (%)"; break;
     case 'temperature': unit = "°C"; yLabel = "Temperatur (°C)"; break;
+    case 'ec': unit = "mS/cm"; yLabel = "EC (mS/cm)"; break;
+    case 'ph': unit = ""; yLabel = "pH-Wert"; break;
   }
   modalTitle.innerText = `Verlauf (letzte 24 Std) – ${yLabel}`;
   
